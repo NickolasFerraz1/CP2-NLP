@@ -18,7 +18,8 @@ O sistema segue os seguintes passos:
    - `Matcher`: para palavras individuais.
    - `PhraseMatcher`: para detectar expressões compostas.
 4. **Cria uma extensão personalizada no objeto `Doc` do spaCy**, que calcula o sentimento com base nas correspondências.
-5. **Analisa uma lista de frases e imprime o sentimento de cada uma**.
+5. **Realiza um pré-processamento para melhorar a consistência dos dados**
+6. **Analisa uma lista de frases e imprime o sentimento de cada uma**.
 
 ---
 
