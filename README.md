@@ -41,31 +41,32 @@ python -m spacy download pt_core_news_sm  # Caso queira usar um modelo treinado 
 import spacy
 from spacy.matcher import Matcher, PhraseMatcher
 from spacy.tokens import Doc
+import re
 
-# 1. Criar pipeline spaCy em branco para português
+# 1. Carregar modelo básico do spaCy
 nlp = spacy.blank("pt")
 
-# 2. Listas de palavras e expressões
+# 2. Listas de palavras positivas e negativas
 palavras_positivas = ["incrível", "amei", "divertido", "adorei", "maravilhosa", "obra-prima", "bom", "superou", "gostei", "linda", "recomendo"]
 palavras_negativas = ["péssimo", "cansativo", "sem graça", "ruim", "chato", "decepcionante", "horrível", "sono", "mal feito", "sem sentido"]
 
-# 3. Criar os matchers
-matcher = Matcher(nlp.vocab)  # Para palavras simples
-phrase_matcher = PhraseMatcher(nlp.vocab)  # Para expressões compostas
+# 3. Criar matchers
+matcher = Matcher(nlp.vocab)
+phrase_matcher = PhraseMatcher(nlp.vocab)
 
-# Adicionar padrões de palavras (MATCHER)
+# Adicionar padrões com palavras individuais (Matcher)
 for palavra in palavras_positivas:
     matcher.add("POSITIVO", [[{"LOWER": palavra}]])
 for palavra in palavras_negativas:
     matcher.add("NEGATIVO", [[{"LOWER": palavra}]])
 
-# Adicionar padrões de frases (PHRASEMATCHER)
-positivas_doc = list(nlp.pipe(palavras_positivas))  # Transforma lista de strings em Docs
+# Adicionar frases compostas com PhraseMatcher
+positivas_doc = list(nlp.pipe(palavras_positivas))
 negativas_doc = list(nlp.pipe(palavras_negativas))
-phrase_matcher.add("POSITIVO", None, *positivas_doc)  # None = usar ORTH como atributo
+phrase_matcher.add("POSITIVO", None, *positivas_doc)
 phrase_matcher.add("NEGATIVO", None, *negativas_doc)
 
-# 4. Criar extensão personalizada no objeto Doc
+# 4. Extensão personalizada no Doc para armazenar sentimento
 def detectar_sentimento(doc):
     matches = matcher(doc) + phrase_matcher(doc)
     positivos = sum(1 for match_id, _, _ in matches if nlp.vocab.strings[match_id] == "POSITIVO")
@@ -80,23 +81,31 @@ def detectar_sentimento(doc):
     else:
         return "NEUTRO"
 
-# Adiciona o atributo personalizado ._.sentimento
 Doc.set_extension("sentimento", getter=detectar_sentimento)
 
-# 5. Frases de teste
+# Função de pré-processamento
+def preprocessar_texto(texto):
+    texto = texto.lower()  # Minúsculas
+    texto = re.sub(r"[^\w\s]", "", texto)  # Remove pontuação
+    texto = re.sub(r"\s+", " ", texto).strip()  # Remove espaços extras
+    return texto
+
+# 5. Lista de frases para testar
 frases = [
     "Esse filme foi incrível! Amei cada parte.",
     "O filme foi péssimo, perdi meu tempo.",
     "Achei o filme ok, nada demais.",
     "Muito divertido, ri bastante!",
-    "Cansativo e sem graça."
+    "Filme ruim"
 ]
 
-# 6. Executar a análise
-print("🔍 Análise baseada em regras:\n")
+# 6. Analisar e imprimir o sentimento com pré-processamento
+print("Análise baseada em regras (com pré-processamento):\n")
 for frase in frases:
-    doc = nlp(frase)
-    print(f"{frase} → {doc._.sentimento}")
+    frase_limpa = preprocessar_texto(frase)
+    doc = nlp(frase_limpa)
+    print(f"{frase} : {doc._.sentimento}")
+
 ```
 
 ---
@@ -119,5 +128,4 @@ Cansativo e sem graça. → NEGATIVO
 
 - Adicionar pesos para diferentes palavras (por exemplo, "obra-prima" pode ter peso maior).
 - Combinar com um modelo `textcat` treinado para um sistema híbrido.
-- Aplicar pré-processamento (remoção de stopwords, lematização).
 - Transformar isso em uma API com Flask ou FastAPI.
