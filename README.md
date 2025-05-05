@@ -1,3 +1,8 @@
+# Integrantes
+Nickolas Ferraz - RM558458   
+Sandron Oliveira - RM557172
+Marcos Paolucci - RM554941
+
 # 📊 Analisador de Sentimentos com spaCy (via Regras)
 
 Este projeto utiliza a biblioteca [spaCy](https://spacy.io/) para **detectar o sentimento de frases** com base em **regras simples de palavras-chave**, usando os componentes `Matcher` e `PhraseMatcher`.
